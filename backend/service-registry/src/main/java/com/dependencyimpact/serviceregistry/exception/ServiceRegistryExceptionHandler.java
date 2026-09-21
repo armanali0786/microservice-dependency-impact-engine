@@ -1,5 +1,7 @@
 package com.dependencyimpact.serviceregistry.exception;
 
+import com.dependencyimpact.common.exceptions.ConflictException;
+import com.dependencyimpact.common.exceptions.ResourceNotFoundException;
 import com.dependencyimpact.common.model.ApiError;
 import com.dependencyimpact.common.model.ApiResponse;
 import org.springframework.http.HttpStatus;
@@ -24,6 +26,23 @@ public class ServiceRegistryExceptionHandler {
     @ExceptionHandler(DuplicateTeamException.class)
     public ResponseEntity<ApiResponse<Void>> handleDuplicateTeam(DuplicateTeamException ex) {
         ApiError error = new ApiError("DUPLICATE_TEAM", ex.getMessage(), null);
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiResponse<>(false, null, error, null));
+    }
+
+    // Fallback for any not-yet-specifically-handled 404 (e.g. ServiceNotFoundException,
+    // UserNotFoundException) - Spring picks the most specific @ExceptionHandler match,
+    // so TeamNotFoundException above still wins over this one for that type.
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleResourceNotFound(ResourceNotFoundException ex) {
+        ApiError error = new ApiError("NOT_FOUND", ex.getMessage(), null);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ApiResponse<>(false, null, error, null));
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ApiResponse<Void>> handleConflict(ConflictException ex) {
+        ApiError error = new ApiError("CONFLICT", ex.getMessage(), null);
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ApiResponse<>(false, null, error, null));
     }
