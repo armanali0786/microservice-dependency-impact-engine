@@ -16,6 +16,11 @@ spring:
     consumer:
       group-id: dependency-graph-consumers
       auto-offset-reset: earliest
+      # Must be false for retry/DLQ to behave correctly - the offset should only
+      # advance after the listener returns normally or the error handler's
+      # recoverer has published to the DLQ, never on a timer regardless of outcome
+      # (docs/kafka-spec.md section 28).
+      enable-auto-commit: false
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
   data:
@@ -28,6 +33,12 @@ graph:
     default-depth: 2
     max-depth: 5
     max-nodes: 500
+
+kafka:
+  retry:
+    max-retries: 4
+    initial-interval-ms: 1000
+    multiplier: 2.0
 
 server:
   port: 8083

@@ -1,6 +1,7 @@
 package com.dependencyimpact.graphservice.kafka.consumer;
 
 import com.dependencyimpact.common.events.EventEnvelope;
+import com.dependencyimpact.common.exceptions.NonRetryableEventException;
 import com.dependencyimpact.common.model.DependencyObservation;
 import com.dependencyimpact.graphservice.entity.Dependency;
 import com.dependencyimpact.graphservice.entity.ProcessedEvent;
@@ -47,8 +48,10 @@ public class DependencyEventConsumer {
             envelope = objectMapper.readValue(message, new TypeReference<>() {
             });
         } catch (Exception e) {
-            log.error("Malformed dependency-events message, dropping: {}", message, e);
-            return;
+            // Malformed JSON will never parse no matter how many times it's retried -
+            // let the container's error handler route it straight to the DLQ
+            // (dependency-events-dlq) instead of silently dropping it.
+            throw new NonRetryableEventException("Malformed dependency-events message: " + message, e);
         }
 
         if (processedEventRepository.existsById(envelope.eventId())) {
@@ -61,6 +64,11 @@ public class DependencyEventConsumer {
         Optional<ServiceLookup> target = serviceLookupRepository.findByName(observation.targetServiceId());
 
         if (source.isEmpty() || target.isEmpty()) {
+            // Deliberately not an exception: this is a legitimate "not registered
+            // yet" business state, not a malformed message, so it shouldn't burn
+            // retries or land in the DLQ. Known limitation carried over from
+            // Milestone 2: if the service never gets registered, this event is
+            // dropped permanently rather than retried once it might resolve.
             log.warn("Unknown service(s) for event {}: {} -> {}. Skipping until both are registered.",
                     envelope.eventId(), observation.sourceServiceId(), observation.targetServiceId());
             return;

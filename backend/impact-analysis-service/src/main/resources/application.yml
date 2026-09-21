@@ -19,6 +19,7 @@ spring:
     consumer:
       group-id: impact-analysis-consumers
       auto-offset-reset: earliest
+      enable-auto-commit: false
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
   data:
@@ -29,6 +30,12 @@ spring:
 services:
   dependency-graph:
     base-url: ${DEPENDENCY_GRAPH_SERVICE_URL:http://localhost:8083}
+
+kafka:
+  retry:
+    max-retries: 4
+    initial-interval-ms: 1000
+    multiplier: 2.0
 
 server:
   port: 8084
