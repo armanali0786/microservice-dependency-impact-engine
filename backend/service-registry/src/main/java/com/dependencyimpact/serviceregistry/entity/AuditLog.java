@@ -3,6 +3,8 @@ package com.dependencyimpact.serviceregistry.entity;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "audit_logs")
@@ -26,6 +28,7 @@ public class AuditLog {
     @Column(name = "correlation_id")
     private String correlationId;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "metadata")
     private String metadata;
 

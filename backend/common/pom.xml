@@ -32,5 +32,17 @@
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-otlp</artifactId>
         </dependency>
+        <!--
+            OncePerRequestFilter (used by CorrelationIdFilter / JwtAuthenticationFilter)
+            comes from spring-web, but its parent interface Filter is defined by the
+            servlet API itself. spring-web marks that dependency "provided" (assumes
+            an app server supplies it), so a library module like this one has to
+            declare it explicitly to even compile against it.
+        -->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 </project>
