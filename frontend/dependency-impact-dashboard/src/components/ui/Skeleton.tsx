@@ -1,3 +1,3 @@
 export function Skeleton() {
-  return null;
+  return <div className="loading-state">Loading…</div>;
 }

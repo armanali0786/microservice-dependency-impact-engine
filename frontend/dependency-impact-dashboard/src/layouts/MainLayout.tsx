@@ -1,3 +1,5 @@
+import { AppShell } from "../components/layout/AppShell";
+
 export function MainLayout() {
-  return null;
+  return <AppShell />;
 }

@@ -1,3 +1,5 @@
-export function Input() {
-  return null;
+import type { InputHTMLAttributes } from "react";
+
+export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
+  return <input className="input" {...props} />;
 }
