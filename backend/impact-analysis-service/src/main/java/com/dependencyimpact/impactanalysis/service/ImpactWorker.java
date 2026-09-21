@@ -68,7 +68,7 @@ public class ImpactWorker {
         impactAnalysisRepository.save(analysis);
 
         try {
-            GraphResponse graph = graphServiceClient.getDownstreamGraph(
+            GraphResponse graph = graphServiceClient.getUpstreamGraph(
                     analysis.getSourceServiceId(), analysis.getTraversalDepth(), analysis.getEnvironment());
 
             List<TraversedComponent> traversed = dependencyPathBuilder.build(graph);

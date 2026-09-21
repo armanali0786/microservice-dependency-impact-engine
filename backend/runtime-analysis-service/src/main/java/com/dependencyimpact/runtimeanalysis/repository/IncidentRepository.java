@@ -7,4 +7,5 @@ import java.util.UUID;
 public interface IncidentRepository extends JpaRepository<Incident, UUID> {
     java.util.List<Incident> findByServiceId(UUID serviceId);
     java.util.List<Incident> findByStatus(String status);
+    java.util.List<Incident> findByServiceIdAndStatus(UUID serviceId, String status);
 }

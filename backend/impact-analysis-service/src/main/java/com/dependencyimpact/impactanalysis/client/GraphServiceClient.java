@@ -23,11 +23,20 @@ public class GraphServiceClient {
     // Blocking on purpose: this runs inside the Kafka consumer thread (ImpactWorker),
     // which is already a background thread doing sequential work - no reactive
     // pipeline needed here, just a synchronous HTTP call.
-    public GraphResponse getDownstreamGraph(UUID serviceId, int depth, String environment) {
+    //
+    // Deliberately UPSTREAM, not downstream: impact analysis asks "if this service
+    // changes/fails, who breaks?" - the answer is whoever depends on it (calls into
+    // it), which is upstream in dependency-graph-service's terms (see
+    // docs/technical-implementation.md section 20). Downstream would instead answer
+    // "what does this service depend on", which is the wrong direction for blast
+    // radius - confirmed by docs/api-structure.md section 65's own example
+    // (sourceService: payment-service, affected component: checkout-service, i.e.
+    // payment's upstream caller, not payment's downstream dependency).
+    public GraphResponse getUpstreamGraph(UUID serviceId, int depth, String environment) {
         try {
             ApiResponse<GraphResponse> response = webClient.get()
                     .uri(uriBuilder -> uriBuilder
-                            .path("/api/v1/graph/services/{id}/downstream")
+                            .path("/api/v1/graph/services/{id}/upstream")
                             .queryParam("depth", depth)
                             .queryParam("environment", environment)
                             .build(serviceId))
