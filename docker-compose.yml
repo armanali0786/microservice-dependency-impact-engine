@@ -1,0 +1,161 @@
+version: "3.9"
+
+networks:
+  microservice-impact-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    environment:
+      POSTGRES_DB: dependency_impact
+      POSTGRES_USER: app_user
+      POSTGRES_PASSWORD: changeme
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - microservice-impact-network
+
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - microservice-impact-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+    networks:
+      - microservice-impact-network
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: otel-collector
+    volumes:
+      - ./infrastructure/otel/otel-collector-config.yaml:/etc/otelcol/config.yaml
+    command: ["--config=/etc/otelcol/config.yaml"]
+    ports:
+      - "4317:4317"
+    networks:
+      - microservice-impact-network
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: backend/api-gateway/Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - service-registry
+    networks:
+      - microservice-impact-network
+
+  service-registry:
+    build:
+      context: .
+      dockerfile: backend/service-registry/Dockerfile
+    container_name: service-registry
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres
+      - kafka
+    networks:
+      - microservice-impact-network
+
+  dependency-collector:
+    build:
+      context: .
+      dockerfile: backend/dependency-collector/Dockerfile
+    container_name: dependency-collector
+    ports:
+      - "8082:8082"
+    depends_on:
+      - kafka
+    networks:
+      - microservice-impact-network
+
+  dependency-graph-service:
+    build:
+      context: .
+      dockerfile: backend/dependency-graph-service/Dockerfile
+    container_name: dependency-graph-service
+    ports:
+      - "8083:8083"
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    networks:
+      - microservice-impact-network
+
+  impact-analysis-service:
+    build:
+      context: .
+      dockerfile: backend/impact-analysis-service/Dockerfile
+    container_name: impact-analysis-service
+    ports:
+      - "8084:8084"
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    networks:
+      - microservice-impact-network
+
+  runtime-analysis-service:
+    build:
+      context: .
+      dockerfile: backend/runtime-analysis-service/Dockerfile
+    container_name: runtime-analysis-service
+    ports:
+      - "8085:8085"
+    depends_on:
+      - postgres
+      - kafka
+      - otel-collector
+    networks:
+      - microservice-impact-network
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: backend/notification-service/Dockerfile
+    container_name: notification-service
+    ports:
+      - "8086:8086"
+    depends_on:
+      - kafka
+    networks:
+      - microservice-impact-network
+
+  frontend:
+    build:
+      context: ./frontend/dependency-impact-dashboard
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api-gateway
+    networks:
+      - microservice-impact-network

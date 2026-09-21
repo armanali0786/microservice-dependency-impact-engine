@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dependency-collector-config
+  namespace: microservice-impact
+data:
+  SPRING_PROFILES_ACTIVE: production

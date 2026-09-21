@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dependency-graph-service
+  namespace: microservice-impact
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: dependency-graph-service
+  template:
+    metadata:
+      labels:
+        app: dependency-graph-service
+    spec:
+      containers:
+        - name: dependency-graph-service
+          image: microservice-impact/dependency-graph-service:latest
+          ports:
+            - containerPort: 8083
+          envFrom:
+            - secretRef:
+                name: app-secrets
+            - configMapRef:
+                name: dependency-graph-service-config

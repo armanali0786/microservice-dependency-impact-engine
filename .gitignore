@@ -1,0 +1,22 @@
+target/
+*.class
+*.log
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Node
+node_modules/
+dist/
+build/
+coverage/
+
+# OS
+.DS_Store
+
+docs/

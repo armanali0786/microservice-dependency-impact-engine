@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: impact-analysis-service
+  namespace: microservice-impact
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: impact-analysis-service
+  template:
+    metadata:
+      labels:
+        app: impact-analysis-service
+    spec:
+      containers:
+        - name: impact-analysis-service
+          image: microservice-impact/impact-analysis-service:latest
+          ports:
+            - containerPort: 8084
+          envFrom:
+            - secretRef:
+                name: app-secrets
+            - configMapRef:
+                name: impact-analysis-service-config

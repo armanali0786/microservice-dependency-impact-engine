@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: runtime-analysis-service
+  namespace: microservice-impact
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: runtime-analysis-service
+  template:
+    metadata:
+      labels:
+        app: runtime-analysis-service
+    spec:
+      containers:
+        - name: runtime-analysis-service
+          image: microservice-impact/runtime-analysis-service:latest
+          ports:
+            - containerPort: 8085
+          envFrom:
+            - secretRef:
+                name: app-secrets
+            - configMapRef:
+                name: runtime-analysis-service-config

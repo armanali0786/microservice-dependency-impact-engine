@@ -1,0 +1,1 @@
+-- Initial database bootstrap; Flyway (database/migrations) manages schema.
