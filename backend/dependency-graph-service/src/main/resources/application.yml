@@ -27,12 +27,21 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+      # Without an explicit timeout, Lettuce's defaults are long enough that a
+      # Redis outage stalls the request for well over a minute before
+      # GraphCacheService's try/catch ever gets a chance to degrade to a live
+      # traversal - the exact same class of bug WebClientConfig's timeout guards
+      # against in impact-analysis-service, just for a different client.
+      connect-timeout: 1000ms
+      timeout: 1000ms
 
 graph:
   traversal:
     default-depth: 2
     max-depth: 5
     max-nodes: 500
+  cache:
+    ttl-seconds: 60
 
 kafka:
   retry:

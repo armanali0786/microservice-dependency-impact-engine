@@ -5,6 +5,7 @@ import com.dependencyimpact.common.model.DependencyCriticality;
 import com.dependencyimpact.common.model.DependencyType;
 import com.dependencyimpact.common.model.FailureBehavior;
 import com.dependencyimpact.common.model.NodeType;
+import com.dependencyimpact.graphservice.cache.GraphCacheKeyBuilder;
 import com.dependencyimpact.graphservice.dto.GraphEdgeDto;
 import com.dependencyimpact.graphservice.dto.GraphNodeDto;
 import com.dependencyimpact.graphservice.dto.GraphResponse;
@@ -13,6 +14,7 @@ import com.dependencyimpact.graphservice.entity.ServiceLookup;
 import com.dependencyimpact.graphservice.exception.GraphTraversalLimitExceededException;
 import com.dependencyimpact.graphservice.repository.DependencyRepository;
 import com.dependencyimpact.graphservice.repository.ServiceLookupRepository;
+import com.dependencyimpact.graphservice.service.GraphCacheService;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayDeque;
@@ -22,6 +24,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
@@ -35,17 +38,29 @@ public class GraphTraversalService {
     private final DependencyRepository dependencyRepository;
     private final ServiceLookupRepository serviceLookupRepository;
     private final GraphTraversalProperties properties;
+    private final GraphCacheService graphCacheService;
+    private final GraphCacheKeyBuilder cacheKeyBuilder;
 
     public GraphTraversalService(DependencyRepository dependencyRepository,
                                   ServiceLookupRepository serviceLookupRepository,
-                                  GraphTraversalProperties properties) {
+                                  GraphTraversalProperties properties,
+                                  GraphCacheService graphCacheService,
+                                  GraphCacheKeyBuilder cacheKeyBuilder) {
         this.dependencyRepository = dependencyRepository;
         this.serviceLookupRepository = serviceLookupRepository;
         this.properties = properties;
+        this.graphCacheService = graphCacheService;
+        this.cacheKeyBuilder = cacheKeyBuilder;
     }
 
     public GraphResponse traverse(UUID rootServiceId, TraversalDirection direction, Integer requestedDepth, String environment) {
         int depth = resolveDepth(requestedDepth);
+
+        String cacheKey = cacheKeyBuilder.build(rootServiceId, direction, environment, depth);
+        Optional<GraphResponse> cached = graphCacheService.get(cacheKey);
+        if (cached.isPresent()) {
+            return cached.get();
+        }
 
         ServiceLookup root = serviceLookupRepository.findById(rootServiceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Service not found: " + rootServiceId));
@@ -83,7 +98,9 @@ public class GraphTraversalService {
             }
         }
 
-        return new GraphResponse(root.getId(), new ArrayList<>(nodesById.values()), edges);
+        GraphResponse response = new GraphResponse(root.getId(), new ArrayList<>(nodesById.values()), edges);
+        graphCacheService.put(cacheKey, response);
+        return response;
     }
 
     private void visitNeighbor(Dependency dependency, UUID neighborId, int currentDepth,
