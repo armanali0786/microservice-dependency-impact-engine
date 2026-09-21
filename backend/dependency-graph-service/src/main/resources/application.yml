@@ -23,6 +23,12 @@ spring:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
 
+graph:
+  traversal:
+    default-depth: 2
+    max-depth: 5
+    max-nodes: 500
+
 server:
   port: 8083
 

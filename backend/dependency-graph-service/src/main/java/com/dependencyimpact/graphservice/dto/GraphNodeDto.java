@@ -1,4 +1,8 @@
 package com.dependencyimpact.graphservice.dto;
 
-public class GraphNodeDto {
+import com.dependencyimpact.common.model.NodeType;
+
+import java.util.UUID;
+
+public record GraphNodeDto(UUID id, NodeType type, String name) {
 }

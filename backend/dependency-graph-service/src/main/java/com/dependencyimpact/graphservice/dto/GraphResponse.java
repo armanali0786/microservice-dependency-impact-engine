@@ -1,4 +1,7 @@
 package com.dependencyimpact.graphservice.dto;
 
-public class GraphResponse {
+import java.util.List;
+import java.util.UUID;
+
+public record GraphResponse(UUID root, List<GraphNodeDto> nodes, List<GraphEdgeDto> edges) {
 }
