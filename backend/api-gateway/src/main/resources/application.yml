@@ -5,6 +5,38 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+  cloud:
+    gateway:
+      httpclient:
+        websocket:
+          max-frame-payload-length: 65536
+
+security:
+  jwt:
+    secret: ${JWT_SECRET:changeme}
+    issuer: dependency-impact-engine
+    expiration-minutes: 60
+
+services:
+  service-registry:
+    url: ${SERVICE_REGISTRY_URL:http://localhost:8081}
+  dependency-graph:
+    url: ${DEPENDENCY_GRAPH_SERVICE_URL:http://localhost:8083}
+  impact-analysis:
+    url: ${IMPACT_ANALYSIS_SERVICE_URL:http://localhost:8084}
+  runtime-analysis:
+    url: ${RUNTIME_ANALYSIS_SERVICE_URL:http://localhost:8085}
+  notification:
+    url: ${NOTIFICATION_SERVICE_URL:http://localhost:8086}
+    ws-url: ${NOTIFICATION_SERVICE_WS_URL:ws://localhost:8086}
+
+gateway:
+  rate-limit:
+    limit: 100
+    window-seconds: 60
+
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000}
 
 server:
   port: 8080

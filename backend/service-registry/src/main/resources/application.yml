@@ -18,6 +18,12 @@ spring:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
 
+security:
+  jwt:
+    secret: ${JWT_SECRET:changeme}
+    issuer: dependency-impact-engine
+    expiration-minutes: 60
+
 server:
   port: 8081
 

@@ -30,6 +30,13 @@ public class ServiceRegistryExceptionHandler {
                 .body(new ApiResponse<>(false, null, error, null));
     }
 
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidCredentials(InvalidCredentialsException ex) {
+        ApiError error = new ApiError("AUTHENTICATION_REQUIRED", ex.getMessage(), null);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ApiResponse<>(false, null, error, null));
+    }
+
     // Fallback for any not-yet-specifically-handled 404 (e.g. ServiceNotFoundException,
     // UserNotFoundException) - Spring picks the most specific @ExceptionHandler match,
     // so TeamNotFoundException above still wins over this one for that type.

@@ -35,6 +35,12 @@ spring:
       connect-timeout: 1000ms
       timeout: 1000ms
 
+security:
+  jwt:
+    secret: ${JWT_SECRET:changeme}
+    issuer: dependency-impact-engine
+    expiration-minutes: 60
+
 graph:
   traversal:
     default-depth: 2

@@ -3,6 +3,7 @@ package com.dependencyimpact.runtimeanalysis.repository;
 import com.dependencyimpact.runtimeanalysis.entity.RuntimeObservation;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
 import java.util.List;
@@ -24,5 +25,5 @@ public interface RuntimeObservationRepository extends JpaRepository<RuntimeObser
 
     @Query("SELECT DISTINCT r.targetServiceId as targetServiceId, r.environment as environment " +
             "FROM RuntimeObservation r WHERE r.observedAt >= :since AND r.targetServiceId IS NOT NULL")
-    List<ServiceEnvironmentPair> findDistinctTargetServiceEnvironmentPairsSince(Instant since);
+    List<ServiceEnvironmentPair> findDistinctTargetServiceEnvironmentPairsSince(@Param("since") Instant since);
 }

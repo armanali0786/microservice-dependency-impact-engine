@@ -17,6 +17,12 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
 
+security:
+  jwt:
+    secret: ${JWT_SECRET:changeme}
+    issuer: dependency-impact-engine
+    expiration-minutes: 60
+
 services:
   impact-analysis:
     base-url: ${IMPACT_ANALYSIS_SERVICE_URL:http://localhost:8084}

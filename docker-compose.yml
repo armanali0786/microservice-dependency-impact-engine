@@ -39,11 +39,19 @@ services:
       CLUSTER_ID: SM5NBD_3TMy1JLcmrsvu8w
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      # Two listeners: PLAINTEXT for other containers on the compose network
+      # (they resolve the "kafka" hostname fine), PLAINTEXT_HOST for anything
+      # running on the host machine itself (backend services run via `mvn
+      # spring-boot:run`, not in Docker) - without this second listener, a
+      # host client's initial bootstrap to localhost:9092 succeeds but every
+      # subsequent connection fails with UnknownHostException: kafka, because
+      # that's the only address the broker ever advertises.
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
     networks:
       - microservice-impact-network
 
